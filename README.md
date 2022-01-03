@@ -64,3 +64,93 @@ export class TestController {
 })();
 ```
 
+### Guards
+Guards are available only for remote methods. The decorator takes a callback with bool return type and only one argument that is RemoteContext
+```typescript
+export class RemoteContext {
+  private readonly id: string;
+  public readonly source: string;
+  public readonly args: unknown[];
+  public readonly metadata: { [p: string]: unknown } = {}; //you can set whatever you want
+
+  constructor(source: unknown, id: string, args: unknown[]) {
+    this.source = source.toString();
+    this.id = id;
+    this.args = args;
+  }
+}
+
+```
+
+Example bellow would allow executing "call" method only to user with source 1
+```typescript
+class T {
+  @Guard(ctx => ctx.source === '1')
+  @Remote()
+  private call(): void {
+    
+  }
+}
+```
+
+You can set as much guards as you wish
+
+### Source injector
+
+Example bellow injects source as the 1st param of this method during remote call/request
+```typescript
+class T {
+  @Remote()
+  private call(@FromSource() src: string): void {
+    
+  }
+}
+```
+You can make it inject whatever you want, even a vehicle, for example
+```typescript
+class Vehicle {
+
+  constructor(public readonly handle: number) {
+  }
+
+  public set plateText(text: string) {
+    SetVehicleNumberPlateText(this.handle, text)
+  }
+
+  public static fromSource(src: string): void {
+    const ped = GetPlayerPed(src);
+    const vehicle = GetVehiclePedIsIn(ped, false);
+    if (vehicle === 0) {
+      return null;
+    }
+    return new Vehicle(vehicle)
+  }
+}
+
+class T {
+  @Remote()
+  private setPlateText(@FromSource() veh: Vehicle, text: string): void {
+    veh.plateText = text;
+  }
+  
+  @Remote()
+  private setPlateTextDangerous(@FromSource(false) veh: Vehicle | null, text: string): void {
+    veh.plateText = text;
+  }
+}
+
+(() => {
+  SourceInjector.addFactory(Vehicle, ctx => Vehicle.fromSource(ctx.source))
+  const app = new Vertex({
+    controllers: [TestController],
+    metadataReaders: [RemoteReader],
+  });
+
+  app.start();
+})();
+```
+setPlateText method will be executed only if the player is inside vehicle
+
+setPlateTextDangerous method will be executed anyway, because false flag is passed into the decorator
+
+factory for String type is predefined, it always returns the source
