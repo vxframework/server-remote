@@ -1,6 +1,6 @@
 {
   "name": "@vxf/svremote",
-  "version": "1.0.0-2",
+  "version": "1.0.0-2-fix-request",
   "main": "lib/index.js",
   "license": "MIT",
   "repository": "https://github.com/vxframework/server-remote",
