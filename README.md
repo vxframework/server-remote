@@ -4,6 +4,7 @@ It's used for remote communication between server & client
 Something like ESX server callbacks or vRP tunnel system
 
 ### Example
+#### Being called
 Server
 ```typescript
 import 'reflect-metadata';
@@ -64,6 +65,69 @@ export class TestController {
 })();
 ```
 
+#### Perform a call
+Server
+```typescript
+@Controller('Test')
+export class TestController {
+  @Command('count')
+  private async auth(src: string): Promise<void> {
+    const result = await RPC.get(src, 'Test', 'countNumbers', 228, 1488);
+    console.log(result);
+  }
+}
+
+(() => {
+  const app = new Vertex({
+    controllers: [TestController],
+    metadataReaders: [RemoteReader, CommandReader],
+  });
+
+  app.start();
+})();
+```
+Client
+```typescript
+
+@Controller('Test')
+export class TestController {
+  @Remote()
+  private countNumbers(param1: number, param2: number): number {
+    return param1 + param2;
+  }
+}
+
+(() => {
+  const app = new Vertex({
+    controllers: [TestController],
+    metadataReaders: [RemoteReader],
+    logger: new Logger('Vertex'),
+  });
+
+  app.start();
+})();
+```
+
+### RPC class
+There are 2 usefull methods
+```typescript
+declare class RPC {
+  static get<T>(target: string | number, controller: string, method: string, ...args: unknown[]): Promise<T>;
+  static call(target: string | number, controller: string, method: string, ...args: unknown[]): void;
+}
+```
+1. target is the source you want to call
+2. controller should be the same as the string you've passed to client side @Controller() decorator
+3. method is the method name you've decorated with @Remote()
+4. ...args - whatever args you want to pass
+
+"get" method returns the result of client side calculations.
+it's a promise, so don't forget to await/ chain with .then()
+
+"call" method returns nothing.
+you can use it if you don't need the result of the client side calculations
+
+
 ### Guards
 Guards are available only for remote methods. The decorator takes a callback with bool return type and only one argument that is RemoteContext
 ```typescript
@@ -71,7 +135,7 @@ export class RemoteContext {
   private readonly id: string;
   public readonly source: string;
   public readonly args: unknown[];
-  public readonly metadata: { [p: string]: unknown } = {}; //you can set whatever you want
+  public readonly metadata: { [p: string]: unknown } = {}; //you can set whatever you want to be here
 
   constructor(source: unknown, id: string, args: unknown[]) {
     this.source = source.toString();
