@@ -48,7 +48,7 @@ export class RPC {
       const id = Random.uuid();
       this.callbacks[id] = { resolve, source: target.toString() };
       emitNet(
-        `vxf.rpc.get.${controller}`,
+        `vxf.rpc.request.${controller}`,
         target,
         method,
         `${GetCurrentResourceName()}:${id}`,

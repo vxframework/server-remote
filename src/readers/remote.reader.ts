@@ -1,14 +1,14 @@
 import { IMetadataReader, Injectable, Reflector } from '@vxf/core';
-import { RemoteListener } from '../lib/remote-listener';
+import { RemoteListener } from '../lib';
 import { GUARD_KEY, REMOTE_KEY, SOURCE_KEY } from '../const';
 import { GuardFn, RemoteMetadata } from '../types';
-import { RPC } from '../lib/RPC';
-import { GuardHandler } from '../lib/guard-handler';
+import { RPC } from '../lib';
+import { GuardHandler } from '../lib';
 import { SourceInjectionValueIsNullException } from '../exceptions';
 import { SourceInjector } from '../lib';
 
 @Injectable()
-export class RemoteMetadataReader implements IMetadataReader {
+export class RemoteReader implements IMetadataReader {
   private handlers: { [p: string]: RemoteListener } = {};
 
   constructor() {
